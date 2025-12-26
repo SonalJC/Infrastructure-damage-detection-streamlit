@@ -47,8 +47,10 @@ if image_file is not None:
     img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
 
     if st.button("🔍 Run Detection"):
-        pred = model.predict(img_array)
-        score = float(pred[0])
+        pred = model(img_array)
+        score = float(pred.numpy()[0][0])
+
+
 
         st.divider()
         if score < 0.5:
