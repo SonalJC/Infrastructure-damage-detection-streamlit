@@ -14,7 +14,6 @@ st.write("Upload an image or use your camera to detect structural damage.")
 MODEL_DIR = "damage_model_tf"
 MODEL_ZIP = "damage_model_tf.zip"
 
-# unzip model if needed
 if not os.path.exists(MODEL_DIR):
     with zipfile.ZipFile(MODEL_ZIP, "r") as z:
         z.extractall(".")
@@ -32,10 +31,11 @@ except Exception as e:
 # ---------------- INPUT ----------------
 mode = st.radio("Select Input Method:", ["Upload Image", "Use Webcam"])
 
-if mode == "Upload Image":
-    image_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-else:
-    image_file = st.camera_input("Capture image")
+image_file = (
+    st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    if mode == "Upload Image"
+    else st.camera_input("Capture image")
+)
 
 # ---------------- PREDICTION ----------------
 if image_file is not None:
@@ -43,11 +43,12 @@ if image_file is not None:
     st.image(img, caption="Input Image", use_container_width=True)
 
     img = img.resize((224, 224))
-    img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
+    img_array = np.array(img).astype("float32")
+    img_array = (img_array / 127.5) - 1.0
+    img_array = np.expand_dims(img_array, axis=0)
 
     if st.button("🔍 Run Detection"):
-        infer = model.signatures["serving_default"]
-        pred = infer(tf.constant(img_array))["output_0"].numpy()[0][0]
+        pred = model(img_array, training=False).numpy()[0][0]
 
         st.divider()
         if pred < 0.5:
