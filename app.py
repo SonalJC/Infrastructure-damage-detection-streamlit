@@ -16,14 +16,20 @@ st.write("Upload an image or use your camera to detect structural damage.")
 # ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_model():
-    model_path = "damage_model_tf"
-    model = tf.keras.models.load_model(model_path)
+    # Use the correct .h5 file path
+    model_path = "finetuned_damage_model.h5"
+    
+    if not os.path.exists(model_path):
+        st.error("❌ Model file not found! Make sure 'finetuned_damage_model.h5' is in the repo root.")
+        st.stop()
+    
+    model = tf.keras.models.load_model(model_path, compile=False)
     return model
 
 try:
     model = load_model()
 except Exception as e:
-    st.error("❌ Model loading failed. Please check model folder.")
+    st.error(f"❌ Model loading failed: {e}")
     st.stop()
 
 # ---------------- INPUT MODE ----------------
@@ -50,7 +56,6 @@ if image_file is not None:
     # Preprocessing
     img = img.resize((224, 224))
     img_array = np.array(img).astype(np.float32)
-
     img_array = (img_array / 127.5) - 1.0
     img_array = np.expand_dims(img_array, axis=0)
 
