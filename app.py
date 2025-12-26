@@ -14,7 +14,7 @@ st.set_page_config(page_title="Infrastructure Damage Detection", layout="centere
 st.markdown(
     """
     <h1 style='text-align: center; font-size: 3rem; font-weight: bold;'>
-        🏗️ Infrastructure Damage Detection
+        🏗️ AI-Based Structural Damage Detection Using Deep Learning
     </h1>
     <p style='text-align: center; font-size: 1.2rem; color: #555555;'>
         Upload an image or use your camera to detect structural damage.
