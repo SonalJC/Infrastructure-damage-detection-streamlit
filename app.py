@@ -20,10 +20,11 @@ if not os.path.exists(MODEL_DIR):
 
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model(MODEL_DIR, compile=False)
+    model = tf.saved_model.load(MODEL_DIR)
+    return model.signatures["serving_default"]
 
 try:
-    model = load_model()
+    infer = load_model()
 except Exception as e:
     st.error(f"❌ Model loading failed: {e}")
     st.stop()
@@ -43,15 +44,16 @@ if image_file is not None:
     st.image(img, caption="Input Image", use_container_width=True)
 
     img = img.resize((224, 224))
-    img_array = np.array(img).astype("float32")
+    img_array = np.array(img).astype(np.float32)
     img_array = (img_array / 127.5) - 1.0
     img_array = np.expand_dims(img_array, axis=0)
 
     if st.button("🔍 Run Detection"):
-        pred = model(img_array, training=False).numpy()[0][0]
+        output = infer(tf.constant(img_array))
+        pred = list(output.values())[0].numpy()[0][0]
 
         st.divider()
         if pred < 0.5:
-            st.error(f"⚠️ DAMAGE DETECTED ({(1 - pred) * 100:.2f}%)")
+            st.error(f"⚠️ DAMAGE DETECTED ({(1-pred)*100:.2f}%)")
         else:
-            st.success(f"✅ NO DAMAGE DETECTED ({pred * 100:.2f}%)")
+            st.success(f"✅ NO DAMAGE DETECTED ({pred*100:.2f}%)")
