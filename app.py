@@ -46,14 +46,12 @@ if image_file is not None:
     img = img.resize((224, 224))
     img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
 
-    if st.button("🔍 Run Detection"):
-        pred = model(img_array)
-        score = float(pred.numpy()[0][0])
+   if st.button("🔍 Run Detection"):
+    infer = model.signatures["serving_default"]
+    pred = infer(tf.constant(img_array))["output_0"].numpy()[0][0]
 
-
-
-        st.divider()
-        if score < 0.5:
-            st.error(f"⚠️ DAMAGE DETECTED ({(1-score)*100:.2f}%)")
-        else:
-            st.success(f"✅ NO DAMAGE DETECTED ({score*100:.2f}%)")
+    st.divider()
+    if pred < 0.5:
+        st.error(f"⚠️ DAMAGE DETECTED ({(1-pred)*100:.2f}%)")
+    else:
+        st.success(f"✅ NO DAMAGE DETECTED ({pred*100:.2f}%)")
