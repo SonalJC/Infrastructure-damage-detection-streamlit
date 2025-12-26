@@ -3,19 +3,29 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+import zipfile
 
 st.set_page_config(page_title="Infrastructure Damage Detection", layout="centered")
 st.title("🏗️ Infrastructure Damage Detection")
 st.write("Upload an image or use your camera to detect structural damage.")
 
 # ---------------- LOAD MODEL ----------------
+
+
+MODEL_DIR = "damage_model_tf"
+
+if not os.path.exists(MODEL_DIR):
+    with zipfile.ZipFile("damage_model_tf.zip", "r") as zip_ref:
+        zip_ref.extractall(".")
+
 @st.cache_resource
 def load_model():
-    model_path = "damage_model_tf"  # SavedModel folder
-    if not os.path.exists(model_path):
-        st.error("❌ Model folder not found! Push 'damage_model_tf/' to repo root.")
-        st.stop()
-    return tf.keras.models.load_model(model_path, compile=False)
+    return tf.keras.models.load_model(MODEL_DIR, compile=False)
+
+model = load_model()
+
+
+
 
 try:
     model = load_model()
