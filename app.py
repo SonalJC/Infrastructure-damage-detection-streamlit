@@ -6,33 +6,23 @@ from PIL import Image
 import tensorflow as tf
 
 # ---------------- PAGE ----------------
+import streamlit as st
+
 st.set_page_config(page_title="Infrastructure Damage Detection", layout="centered")
 
-# Custom CSS for centering title and improving layout
-st.markdown("""
-    <style>
-    .title {
-        text-align: center;
-        font-size: 2.5rem;
-        font-weight: bold;
-    }
-    .description {
-        text-align: center;
-        font-size: 1.2rem;
-        color: #555555;
-        margin-bottom: 20px;
-    }
-    .stButton button {
-        width: 100%;
-        background-color: #4CAF50;
-        color: white;
-        font-size: 1rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# ---------------- Centered Title ----------------
+st.markdown(
+    """
+    <h1 style='text-align: center; font-size: 3rem; font-weight: bold;'>
+        🏗️ Infrastructure Damage Detection
+    </h1>
+    <p style='text-align: center; font-size: 1.2rem; color: #555555;'>
+        Upload an image or use your camera to detect structural damage.
+    </p>
+    """,
+    unsafe_allow_html=True
+)
 
-st.markdown('<div class="title">🏗️ Infrastructure Damage Detection</div>', unsafe_allow_html=True)
-st.markdown('<div class="description">Upload an image or use your camera to detect structural damage.</div>', unsafe_allow_html=True)
 
 # ---------------- LOAD MODEL ----------------
 MODEL_DIR = "damage_model_tf"
