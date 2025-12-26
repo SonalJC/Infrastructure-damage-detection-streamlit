@@ -7,30 +7,55 @@ import tensorflow as tf
 
 # ---------------- PAGE ----------------
 st.set_page_config(page_title="Infrastructure Damage Detection", layout="centered")
-st.title("🏗️ Infrastructure Damage Detection")
-st.write("Upload an image or use your camera to detect structural damage.")
+
+# Custom CSS for centering title and improving layout
+st.markdown("""
+    <style>
+    .title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    .description {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #555555;
+        margin-bottom: 20px;
+    }
+    .stButton button {
+        width: 100%;
+        background-color: #4CAF50;
+        color: white;
+        font-size: 1rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="title">🏗️ Infrastructure Damage Detection</div>', unsafe_allow_html=True)
+st.markdown('<div class="description">Upload an image or use your camera to detect structural damage.</div>', unsafe_allow_html=True)
 
 # ---------------- LOAD MODEL ----------------
 MODEL_DIR = "damage_model_tf"
 MODEL_ZIP = "damage_model_tf.zip"
 
-if not os.path.exists(MODEL_DIR):
+# unzip model if needed
+if not os.path.exists(MODEL_DIR) and os.path.exists(MODEL_ZIP):
     with zipfile.ZipFile(MODEL_ZIP, "r") as z:
         z.extractall(".")
 
 @st.cache_resource
 def load_model():
-    model = tf.saved_model.load(MODEL_DIR)
-    return model.signatures["serving_default"]
+    return tf.keras.models.load_model(MODEL_DIR, compile=False)
 
 try:
-    infer = load_model()
+    model = load_model()
 except Exception as e:
     st.error(f"❌ Model loading failed: {e}")
     st.stop()
 
 # ---------------- INPUT ----------------
-mode = st.radio("Select Input Method:", ["Upload Image", "Use Webcam"])
+st.markdown("### Select Input Method:")
+mode = st.radio("", ["Upload Image", "Use Webcam"], index=0, horizontal=True)
 
 image_file = (
     st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
@@ -44,15 +69,13 @@ if image_file is not None:
     st.image(img, caption="Input Image", use_container_width=True)
 
     img = img.resize((224, 224))
-    img_array = np.array(img).astype(np.float32)
-    img_array = (img_array / 127.5) - 1.0
-    img_array = np.expand_dims(img_array, axis=0)
+    img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
 
     if st.button("🔍 Run Detection"):
-        output = infer(tf.constant(img_array))
-        pred = list(output.values())[0].numpy()[0][0]
+        # Prediction
+        pred = model(img_array, training=False).numpy()[0][0]
 
-        st.divider()
+        st.markdown("---")  # Divider
         if pred < 0.5:
             st.error(f"⚠️ DAMAGE DETECTED ({(1-pred)*100:.2f}%)")
         else:
