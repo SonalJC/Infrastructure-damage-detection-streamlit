@@ -6,46 +6,31 @@ from PIL import Image
 import tensorflow as tf
 
 # ---------------- PAGE ----------------
-import streamlit as st
-
 st.set_page_config(page_title="Infrastructure Damage Detection", layout="centered")
-
-# ---------------- Centered Title ----------------
-st.markdown(
-    """
-    <h1 style='text-align: center; font-size: 3rem; font-weight: bold;'>
-        🏗️ AI-Based Structural Damage Detection Using Deep Learning
-    </h1>
-    <p style='text-align: center; font-size: 1.2rem; color: #555555;'>
-        Upload an image or use your camera to detect structural damage.
-    </p>
-    """,
-    unsafe_allow_html=True
-)
-
+st.title("🏗️ Infrastructure Damage Detection")
+st.write("Upload an image or use your camera to detect structural damage.")
 
 # ---------------- LOAD MODEL ----------------
 MODEL_DIR = "damage_model_tf"
 MODEL_ZIP = "damage_model_tf.zip"
 
-# unzip model if needed
-if not os.path.exists(MODEL_DIR) and os.path.exists(MODEL_ZIP):
+if not os.path.exists(MODEL_DIR):
     with zipfile.ZipFile(MODEL_ZIP, "r") as z:
         z.extractall(".")
 
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model(MODEL_DIR, compile=False)
+    model = tf.saved_model.load(MODEL_DIR)
+    return model.signatures["serving_default"]
 
 try:
-    model = load_model()
+    infer = load_model()
 except Exception as e:
     st.error(f"❌ Model loading failed: {e}")
     st.stop()
 
 # ---------------- INPUT ----------------
-st.markdown("### Select Input Method:")
-mode = st.radio("", ["Upload Image", "Use Webcam"], index=0, horizontal=True)
+mode = st.radio("Select Input Method:", ["Upload Image", "Use Webcam"])
 
 image_file = (
     st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
@@ -59,13 +44,15 @@ if image_file is not None:
     st.image(img, caption="Input Image", use_container_width=True)
 
     img = img.resize((224, 224))
-    img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
+    img_array = np.array(img).astype(np.float32)
+    img_array = (img_array / 127.5) - 1.0
+    img_array = np.expand_dims(img_array, axis=0)
 
     if st.button("🔍 Run Detection"):
-        # Prediction
-        pred = model(img_array, training=False).numpy()[0][0]
+        output = infer(tf.constant(img_array))
+        pred = list(output.values())[0].numpy()[0][0]
 
-        st.markdown("---")  # Divider
+        st.divider()
         if pred < 0.5:
             st.error(f"⚠️ DAMAGE DETECTED ({(1-pred)*100:.2f}%)")
         else:
