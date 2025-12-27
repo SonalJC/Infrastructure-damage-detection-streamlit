@@ -42,7 +42,7 @@ if image_file is not None:
     img_array = np.expand_dims(img_array, axis=0)
 
     if st.button("🔍 Run Detection"):
-        pred = model(img_array, training=False).numpy()[0][0]
+        pred = model.predict(img_array)[0][0]
 
         st.divider()
 
