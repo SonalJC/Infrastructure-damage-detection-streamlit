@@ -27,7 +27,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Centered Title and Subtitle
-st.markdown('<div class="main-title">🏗️ Infrastructure Damage Detection</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">🏗️ AI-Based Structural Damage Detection Using Deep Learning </div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Upload an image or use your camera to detect structural damage.</div>', unsafe_allow_html=True)
 
 # ---------------- LOAD MODEL ----------------
