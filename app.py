@@ -55,13 +55,11 @@ if image_file is not None:
     img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
 
 if st.button("🔍 Run Detection"):
-    output = model(img_array, training=False)
+    infer = model.signatures["serving_default"]
+    output = infer(tf.constant(img_array))
 
-    # handle tensor / dict safely
-    if isinstance(output, dict):
-        pred = float(list(output.values())[0][0][0])
-    else:
-        pred = float(output[0][0])
+    # get prediction safely
+    pred = float(list(output.values())[0][0][0])
 
     st.divider()
 
