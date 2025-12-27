@@ -1,72 +1,55 @@
-import os
-import zipfile
 import streamlit as st
+import tensorflow as tf
 import numpy as np
 from PIL import Image
-import tensorflow as tf
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
-st.write("🔥 APP VERSION 2.0 🔥")
+# --- PAGE SETTINGS ---
+st.set_page_config(page_title="🏗️ Structural Damage Detector", layout="centered")
 
-# ---------------- PAGE ----------------
-st.set_page_config(page_title="Infrastructure Damage Detection", layout="centered")
-
-st.markdown(
-    "<h1 style='text-align:center;'>🏗️ Infrastructure Damage Detection</h1>",
-    unsafe_allow_html=True
-)
-st.markdown(
-    "<p style='text-align:center;'>Upload an image or use your camera to detect structural damage</p>",
-    unsafe_allow_html=True
-)
-
-# ---------------- LOAD MODEL ----------------
-MODEL_DIR = "damage_model_tf"
-MODEL_ZIP = "damage_model_tf.zip"
-
-if not os.path.exists(MODEL_DIR):
-    with zipfile.ZipFile(MODEL_ZIP, "r") as z:
-        z.extractall(".")
-
+# --- LOAD MODEL ---
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model(MODEL_DIR, compile=False)
+    return tf.keras.models.load_model("damage_model_tf", compile=False)
 
-try:
-    model = load_model()
-except Exception as e:
-    st.error(f"❌ Model loading failed: {e}")
-    st.stop()
+model = load_model()
 
-# ---------------- INPUT ----------------
-mode = st.radio("Select Input Method:", ["Upload Image", "Use Webcam"])
+# --- PREDICTION FUNCTION ---
+def predict(image):
+    # Resize image to 224x224 (MobileNetV2 input size)
+    img = image.resize((224, 224))
+    
+    # Convert to array
+    img_array = np.array(img)
+    
+    # Preprocess like MobileNetV2
+    img_array = preprocess_input(img_array)
+    
+    # Add batch dimension
+    img_array = np.expand_dims(img_array, axis=0)
+    
+    # Ensure correct dtype
+    img_array = img_array.astype(np.float32)
+    
+    # Predict
+    output = model.predict(img_array)
+    return output[0][0]  # return single value
 
-image_file = (
-    st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-    if mode == "Upload Image"
-    else st.camera_input("Capture image")
-)
+# --- STREAMLIT UI ---
+st.title("🏗️ Structural Damage Detection")
+st.write("Upload an image of a structure to detect potential damage.")
 
-# ---------------- PREDICTION ----------------
-if image_file is not None:
-    img = Image.open(image_file).convert("RGB")
-    st.image(img, caption="Input Image", use_container_width=True)
+uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
 
-    img = img.resize((224, 224))
-    img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
-
-if st.button("🔍 Run Detection"):
-    infer = model.signatures["serving_default"]
-    output = infer(tf.constant(img_array))
-
-    # get prediction safely
-    pred = float(list(output.values())[0][0][0])
-
-    st.divider()
-
-    if pred < 0.33:
-        st.error(f"🔴 Severe Damage ({(1-pred)*100:.2f}%)")
-    elif pred < 0.66:
-        st.warning(f"🟠 Moderate Damage ({(1-pred)*100:.2f}%)")
+if uploaded_file:
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+    
+    with st.spinner("Analyzing..."):
+        damage_prob = predict(image)
+    
+    # Display result
+    if damage_prob > 0.5:
+        st.error(f"⚠️ Damage Detected! Probability: {damage_prob:.2f}")
     else:
-        st.success(f"🟢 No / Low Damage ({pred*100:.2f}%)")
-
+        st.success(f"✅ No Significant Damage Detected. Probability: {damage_prob:.2f}")
