@@ -48,26 +48,26 @@ if image_file is not None:
     img_array = (img_array / 127.5) - 1.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    if st.button("🔍 Run Detection"):
-    
-        pred = model(img_array, training=False).numpy()[0][0]
-        confidence = pred * 100
-    
-        st.divider()
-    
-        if pred < 0.4:
-            severity = "🔴 Severe Damage"
-            explanation = "Major cracks or structural failure detected. Immediate inspection recommended."
-            st.error(f"{severity}\n\nConfidence: {100-confidence:.2f}%")
-    
-        elif pred < 0.7:
-            severity = "🟠 Moderate Damage"
-            explanation = "Visible damage detected. Maintenance or repair may be required."
-            st.warning(f"{severity}\n\nConfidence: {100-confidence:.2f}%")
-    
-        else:
-            severity = "🟢 Low / No Damage"
-            explanation = "No significant structural damage detected."
-            st.success(f"{severity}\n\nConfidence: {confidence:.2f}%")
-    
-        st.info(f"📌 **Explanation:** {explanation}")
+if st.button("🔍 Run Detection"):
+
+    pred = model(img_array, training=False).numpy()[0][0]
+    confidence = pred * 100
+
+    st.divider()
+
+    if pred < 0.4:
+        severity = "🔴 Severe Damage"
+        explanation = "Major cracks or structural failure detected. Immediate inspection recommended."
+        st.error(f"{severity}\n\nConfidence: {100-confidence:.2f}%")
+
+    elif pred < 0.7:
+        severity = "🟠 Moderate Damage"
+        explanation = "Visible damage detected. Maintenance or repair may be required."
+        st.warning(f"{severity}\n\nConfidence: {100-confidence:.2f}%")
+
+    else:
+        severity = "🟢 Low / No Damage"
+        explanation = "No significant structural damage detected."
+        st.success(f"{severity}\n\nConfidence: {confidence:.2f}%")
+
+    st.info(f"📌 **Explanation:** {explanation}")
