@@ -49,11 +49,25 @@ if image_file is not None:
     img_array = np.expand_dims(img_array, axis=0)
 
     if st.button("🔍 Run Detection"):
-        output = infer(tf.constant(img_array))
-        pred = list(output.values())[0].numpy()[0][0]
-
+    
+        pred = model(img_array, training=False).numpy()[0][0]
+        confidence = pred * 100
+    
         st.divider()
-        if pred < 0.5:
-            st.error(f"⚠️ DAMAGE DETECTED ({(1-pred)*100:.2f}%)")
+    
+        if pred < 0.4:
+            severity = "🔴 Severe Damage"
+            explanation = "Major cracks or structural failure detected. Immediate inspection recommended."
+            st.error(f"{severity}\n\nConfidence: {100-confidence:.2f}%")
+    
+        elif pred < 0.7:
+            severity = "🟠 Moderate Damage"
+            explanation = "Visible damage detected. Maintenance or repair may be required."
+            st.warning(f"{severity}\n\nConfidence: {100-confidence:.2f}%")
+    
         else:
-            st.success(f"✅ NO DAMAGE DETECTED ({pred*100:.2f}%)")
+            severity = "🟢 Low / No Damage"
+            explanation = "No significant structural damage detected."
+            st.success(f"{severity}\n\nConfidence: {confidence:.2f}%")
+    
+        st.info(f"📌 **Explanation:** {explanation}")
