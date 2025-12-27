@@ -55,9 +55,9 @@ if image_file is not None:
     img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
 
 if st.button("🔍 Run Detection"):
-    output = model.predict(img_array)
+    output = model(img_array, training=False)
 
-    # handle SavedModel dict output
+    # handle tensor / dict safely
     if isinstance(output, dict):
         pred = float(list(output.values())[0][0][0])
     else:
@@ -71,3 +71,4 @@ if st.button("🔍 Run Detection"):
         st.warning(f"🟠 Moderate Damage ({(1-pred)*100:.2f}%)")
     else:
         st.success(f"🟢 No / Low Damage ({pred*100:.2f}%)")
+
