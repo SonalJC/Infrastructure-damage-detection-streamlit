@@ -55,7 +55,13 @@ if image_file is not None:
     img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
 
 if st.button("🔍 Run Detection"):
-    pred = float(np.array(model.predict(img_array)).ravel()[0])
+    output = model.predict(img_array)
+
+    # handle SavedModel dict output
+    if isinstance(output, dict):
+        pred = float(list(output.values())[0][0][0])
+    else:
+        pred = float(output[0][0])
 
     st.divider()
 
