@@ -54,14 +54,14 @@ if image_file is not None:
     img = img.resize((224, 224))
     img_array = np.expand_dims((np.array(img) / 127.5 - 1.0), axis=0)
 
-    if st.button("🔍 Run Detection"):
-        pred = float(model.predict(img_array).reshape(-1)[0])
+if st.button("🔍 Run Detection"):
+    pred = float(np.array(model.predict(img_array)).ravel()[0])
 
-        st.divider()
+    st.divider()
 
-        if pred < 0.33:
-            st.error(f"🔴 Severe Damage ({(1-pred)*100:.2f}%)")
-        elif pred < 0.66:
-            st.warning(f"🟠 Moderate Damage ({(1-pred)*100:.2f}%)")
-        else:
-            st.success(f"🟢 No / Low Damage ({pred*100:.2f}%)")
+    if pred < 0.33:
+        st.error(f"🔴 Severe Damage ({(1-pred)*100:.2f}%)")
+    elif pred < 0.66:
+        st.warning(f"🟠 Moderate Damage ({(1-pred)*100:.2f}%)")
+    else:
+        st.success(f"🟢 No / Low Damage ({pred*100:.2f}%)")
