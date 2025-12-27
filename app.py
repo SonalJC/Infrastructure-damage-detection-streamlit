@@ -5,6 +5,8 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 
+st.write("🔥 APP VERSION 2.0 🔥")
+
 # ---------------- PAGE ----------------
 st.set_page_config(page_title="Infrastructure Damage Detection", layout="centered")
 
